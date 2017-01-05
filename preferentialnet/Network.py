@@ -60,7 +60,7 @@ class Network(object):
     def get_node_degs(self):
         return [n.sum_link_weights() for n in self.nodes]
 
-    def get_weight_matrix(self):
+    def get_weight_matrix(self, shape=None):
 
         rows = []
         cols = []
@@ -69,12 +69,19 @@ class Network(object):
             for l in n.links:
                 rows.append(l.source.id)
                 cols.append(l.target.id)
+                rows.append(l.target.id)
+                cols.append(l.source.id)
         size = len(cols)
         data = [1 for i in range(size)]
         matrix = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(shape_n, shape_n)).todense()
-        matrix[matrix > 1] = 1
+        matrix[matrix > 0] = 1
 
-        return matrix
+        if shape is not None:
+            return matrix[:, np.random.randint(matrix.shape[0], size=shape)]
+        else:
+            return matrix
+
+
 
 
 
