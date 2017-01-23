@@ -94,4 +94,5 @@ mnist/
 mnist_criticality/tensorboard_dir/
 
 .idea/
-.raw_data/
+raw_data/
+models/tensorboard*
