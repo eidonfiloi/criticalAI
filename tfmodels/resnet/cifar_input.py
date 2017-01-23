@@ -24,7 +24,7 @@ def build_input(dataset, data_path, batch_size, mode):
 
   Args:
     dataset: Either 'cifar10' or 'cifar100'.
-    data_path: Filename for data.
+    data_path: Filename for raw_data.
     batch_size: Input batch size.
     mode: Either 'train' or 'eval'.
   Returns:

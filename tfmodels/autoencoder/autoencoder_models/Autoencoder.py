@@ -47,6 +47,9 @@ class Autoencoder(object):
         cost, opt = self.sess.run((self.cost, self.optimizer), feed_dict={self.x: X})
         return cost
 
+    def inference(self, X):
+        return self.sess.run(self.cost, feed_dict={self.x: X})
+
     def calc_total_cost(self, X):
         return self.sess.run(self.cost, feed_dict = {self.x: X})
 
@@ -60,6 +63,10 @@ class Autoencoder(object):
 
     def reconstruct(self, X):
         return self.sess.run(self.reconstruction, feed_dict={self.x: X})
+
+    def get_hidden_activation(self, X):
+
+        return [self.sess.run(self.hidden, feed_dict={self.x: X})]
 
     def getWeights(self):
         return self.sess.run(self.weights['w1'])

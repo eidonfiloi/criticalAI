@@ -40,7 +40,7 @@ for epoch in range(training_epochs):
     for i in range(total_batch):
         batch_xs = get_random_block_from_data(X_train, batch_size)
 
-        # Fit training using batch data
+        # Fit training using batch raw_data
         cost = autoencoder.partial_fit(batch_xs)
         # Compute average loss
         avg_cost += cost / n_samples * batch_size
