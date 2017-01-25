@@ -6,13 +6,19 @@ import tensorflow as tf
 from preferentialnet.PNetwork import *
 import pickle
 from utils.Utils import *
+import random
+
+
 class TFTest(unittest.TestCase):
 
     def test_histogram(self):
         x = np.random.rand(1000).astype(np.float32)
 
+        cmap = plt.get_cmap('viridis')
+        color = random.choice(cmap.colors)
+
         # the histogram of the raw_data
-        n, bins, patches = plt.hist(x, 50, normed=1, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(x, 50, normed=1, color=random.choice(cmap.colors), alpha=0.75)
 
         # add a 'best fit' line
         l = plt.plot(bins)

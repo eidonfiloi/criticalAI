@@ -13,7 +13,7 @@ class FeedforwardNet(object):
         self.input_dim = self.network_shape[0]
         self.output_dim = self.network_shape[-1]
         self.start_weights = start_weights
-        self.weights = self.initialize_weights()
+        self.weights = {}
         self.tensorboard_dir = self.params['tensorboard_dir']
 
         self.activation_function = self.params['activation_function']
@@ -24,10 +24,21 @@ class FeedforwardNet(object):
         self.activation_patterns = {}
 
         self.activation = self.input
-        for i in range(len(self.weights)):
-            act = self.activation_function(tf.matmul(self.activation, self.weights['W_{0}'.format(i)]))
-            self.activation = act
-            self.activation_patterns['activation_layer_{0}'.format(i + 1)] = act
+
+        for i in range(len(self.network_shape) - 1):
+            with tf.name_scope("layer_{0}".format(i+1)):
+                W = tf.Variable(tf.truncated_normal(shape=[self.network_shape[i], self.network_shape[i+1]], stddev=0.1),name="W")
+                b = tf.Variable(tf.constant(0.1, shape=[self.network_shape[i+1]]), name="b")
+                self.weights['W_{0}'.format(i+1)] = W
+                Utils.variable_summaries(W, "W")
+                Utils.variable_summaries(b, "b")
+                self.activation = self.activation_function(tf.matmul(self.activation, W) + b)
+                self.activation_patterns['activation_layer_{0}'.format(i + 1)] = self.activation
+
+        # for i in range(len(self.weights)):
+        #     act = self.activation_function(tf.matmul(self.activation, self.weights['W_{0}'.format(i)]))
+        #     self.activation = act
+        #     self.activation_patterns['activation_layer_{0}'.format(i + 1)] = act
 
         # cost
 
@@ -41,9 +52,9 @@ class FeedforwardNet(object):
         self.sess = tf.Session()
 
         self.merged = tf.summary.merge_all()
-        self.summ_writer = tf.train.SummaryWriter(self.tensorboard_dir, self.sess.graph)
+        self.summ_writer = tf.summary.FileWriter(self.tensorboard_dir, self.sess.graph)
 
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
 
         self.sess.run(init)
 
@@ -84,5 +95,5 @@ class FeedforwardNet(object):
         if weight_name is not None:
             return [self.sess.run(self.weights[weight_name])]
         else:
-            return [self.sess.run(self.weights['W_{0}'.format(i)]) for i in range(len(self.weights))]
+            return [self.sess.run(v) for _, v in self.weights.items()]
 

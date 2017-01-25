@@ -30,9 +30,9 @@ Y_test = mnist.test.labels
 
 n_samples = int(mnist.train.num_examples)
 n_test_samples = int(mnist.test.num_examples)
-training_epochs = 150
+training_epochs = 1
 eval_epochs = 1
-inference_epochs = 20
+inference_epochs = 1
 batch_size = 128
 display_step = 1
 
@@ -40,21 +40,11 @@ params = {
     'network_shape': [784, 400, 200, 200, 100, 10],
     'activation_function': tf.nn.relu,
     'optimizer': tf.train.AdamOptimizer(learning_rate=1e-4),
-    'tensorboard_dir': 'models/tensorboard',
+    'tensorboard_dir': 'models/tensorboard_ff',
     'layers_with_start': [0]
 }
-
-# start_weight_dict = {}
-# for i in params['layers_with_start']:
-#     start_w = np.load("raw_data/start_w_{0}.npy".format(params['network_shape'][i]))[:, np.random.randint(params['network_shape'][i], size=params['network_shape'][i+1])].astype('float32')
-#     start_w -= 0.0000001
-#     start_weight_dict['W_{0}'.format(i)] = start_w
-#     Utils.plot_histogram(np.sum(start_w, 0).tolist(), 50)
-
-#model = FeedforwardNet(params, start_weight_dict)
 model = FeedforwardNet(params)
 
-activation_dicts = [{} for i in range(1, len(params['network_shape']))]
 for epoch in range(training_epochs):
     avg_cost=0.0
     total_batch=int(n_samples / batch_size)
@@ -90,8 +80,11 @@ for epoch_ in range(eval_epochs):
         if epoch_ % 100 == 0:
             print("Epoch:", '%04d' % (epoch_ + 1), "accuracy =", "{:.9f}".format(accuracy))
 
+with open("results/ff/eval_{0}.pickle".format("_".join(params['network_shape'][1:-1])), 'wb') as act_f:
+    pickle.dump(eval, act_f)
 print(eval)
 
+activation_dicts = [{} for i in range(1, len(params['network_shape']))]
 for epoch in range(inference_epochs):
     total_batch=int(n_samples / batch_size)
     # Loop over all batches
@@ -115,5 +108,5 @@ sorted_acts = []
 for act_dict in activation_dicts:
     act_sorted = sorted(set(act_dict.values()), reverse=True)[:1000]
     sorted_acts.append(act_sorted)
-with open("raw_data/frequent_activations_top1000_counts_ffnet_400_200_200_100.pickle", 'wb') as act_f:
+with open("results/ff/act_{0}.pickle".format("_".join(params['network_shape'][1:-1])), 'wb') as act_f:
     pickle.dump(sorted_acts, act_f)

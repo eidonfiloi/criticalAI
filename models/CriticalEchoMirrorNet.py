@@ -44,15 +44,15 @@ class CriticalEchoMirrorNet(object):
         for i in range(len(self.network_shape) - 1):
             with tf.name_scope("layer{0}".format(i + 1)):
                 # input weight and bias
-                W = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.01),
+                W = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.1),
                                 name="W")
-                bW = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name="bW")
+                bW = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name="bW")
                 Utils.variable_summaries(W, "W")
                 Utils.variable_summaries(bW, "bW")
                 if i < len(self.network_shape) - 2:
                     # mirror input and bias
-                    M = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.01), name="M")
-                    bM = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name="bM")
+                    M = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.1), name="M")
+                    bM = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name="bM")
                     Utils.variable_summaries(M, "M")
                     Utils.variable_summaries(bM, "bM")
                     # hidden state power lawed hidden connections
@@ -61,11 +61,11 @@ class CriticalEchoMirrorNet(object):
                         H = tf.Variable(self.hidden_weights[H_name].astype('float32'), dtype=tf.float32, trainable=False, name="H")
 
                     else:
-                        H = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.01), trainable=False, name="H")
+                        H = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.1), trainable=False, name="H")
 
                     # readout weights and biases
-                    R = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.01), name="R")
-                    bR = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name="bR")
+                    R = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.1), name="R")
+                    bR = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name="bR")
                     Utils.variable_summaries(R, "R")
                     Utils.variable_summaries(bR, "bR")
 
@@ -113,7 +113,7 @@ class CriticalEchoMirrorNet(object):
         for i in range(1, len(self.network_shape) - 1):
             with tf.name_scope('layer_{0}'.format(i)):
                 name = "hs_{0}".format(i)
-                h_state = tf.random_normal([self.batch_size, self.network_shape[i]], stddev=0.01, name=name)
+                h_state = tf.random_normal([self.batch_size, self.network_shape[i]], stddev=0.1, name=name)
                 hidden_states[name] = h_state
                 Utils.variable_summaries(h_state, name)
         return hidden_states
@@ -129,7 +129,7 @@ class CriticalEchoMirrorNet(object):
                     Utils.variable_summaries(h_current, name)
                 else:
                     h_current = tf.Variable(
-                        tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.01), trainable=False, name=name)
+                        tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.1), trainable=False, name=name)
                     hidden_weights[name] = h_current
                     Utils.variable_summaries(h_current, name)
         return hidden_weights
@@ -140,8 +140,8 @@ class CriticalEchoMirrorNet(object):
             with tf.name_scope("layer_{0}".format(i+1)):
                 w_name = "W_{0}".format(i)
                 b_name = "bW_{0}".format(i)
-                w_current = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.01), name=w_name)
-                b_current = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name=b_name)
+                w_current = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.1), name=w_name)
+                b_current = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name=b_name)
                 all_weights[w_name] = w_current
                 all_weights[b_name] = b_current
                 Utils.variable_summaries(w_current, w_name)
@@ -154,8 +154,8 @@ class CriticalEchoMirrorNet(object):
             with tf.name_scope("layer_{0}".format(i+1)):
                 w_name = "R_{0}".format(i)
                 b_name = "bR_{0}".format(i)
-                r_current = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.01), name=w_name)
-                b_current = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name=b_name)
+                r_current = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.1), name=w_name)
+                b_current = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name=b_name)
                 all_weights[w_name] = r_current
                 all_weights[b_name] = b_current
                 Utils.variable_summaries(r_current, w_name)
@@ -168,8 +168,8 @@ class CriticalEchoMirrorNet(object):
             with tf.name_scope("layer_{0}".format(i+1)):
                 w_name = "M_{0}".format(i)
                 b_name = "bM_{0}".format(i)
-                w_current = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.01), name=w_name)
-                b_current = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name=b_name)
+                w_current = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.1), name=w_name)
+                b_current = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name=b_name)
                 all_weights[w_name] = w_current
                 all_weights[b_name] = b_current
                 Utils.variable_summaries(w_current, w_name)

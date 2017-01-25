@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import random
+import math
 
 
 class Utils(object):
@@ -10,25 +12,34 @@ class Utils(object):
     """
 
     @staticmethod
-    def plot_histogram(data, binN):
+    def plot_histogram(data, title="", binN=30, save_to=None, loglog=True):
         # the histogram of the raw_data
 
+        if loglog:
+            data_ = np.log10(data)
+        else:
+            data_ = data
+        cmap = plt.get_cmap('viridis')
+        color = random.choice(cmap.colors)
+        binN = 2*int(math.sqrt(len(data_)))
+        binw = (max(data_) - min(data_)) / binN
+        bins = np.arange(min(data_), max(data_) + binw, binw)
+
         plt.figure()
-        n, bins, patches = plt.hist(np.log2(data), binN, log=True, facecolor='green', alpha=0.75)
+        if loglog:
+            plt.hist(data_, bins=bins, log=True, color=color, alpha=0.90)
+        else:
+            plt.hist(data_, bins=bins, log=False, color=color, alpha=0.90)
 
-        # add a 'best fit' line
-        # plt.plot(np.log10(bins))
-        # plt.gca().set_xscale("log")
-        # plt.gca().set_yscale("log")
-
-        plt.xlabel('Degree')
-        plt.ylabel('Probability')
-        plt.title(r'$\mathrm{Histogram\ of\ network degree distribution:}$')
-        # plt.axis([0, 200, 0, 40.0])
+        plt.xlabel('weight degree')
+        plt.ylabel('Counts')
+        plt.title(title)
         plt.grid(True)
 
-        plt.show()
-
+        if save_to is not None:
+            plt.savefig(save_to)
+        else:
+            plt.show()
 
     @staticmethod
     def plot_line(data, save_to=None):
