@@ -6,7 +6,7 @@ import sklearn.preprocessing as prep
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from dataprovider.cifar import *
-from models.FeedforwardNet import *
+from models.Autoencoder import *
 import pickle
 
 cifarData = CifarData()
@@ -38,18 +38,18 @@ inference_epochs = 100
 batch_size = 100
 display_step = 1
 
-MODEL_NAME = "ff"
+MODEL_NAME = "ae"
 
 params = {
-    'network_shape': [1024, 600, 300, 10],
+    'network_shape': [1024, 600, 10],
     'activation_function': tf.nn.relu,
     'optimizer': tf.train.AdamOptimizer(learning_rate=1e-4),
-    'tensorboard_dir': 'models/tensorboard_ff',
-    'activation_pattern_layers': ['layer_1', 'layer_2'],
+    'tensorboard_dir': 'models/tensorboard_ae',
+    'activation_pattern_layers': ['layer_1'],
     'layers_with_start': [0]
 }
 
-model = FeedforwardNet(params)
+model = Autoencoder(params)
 
 global_step = 1
 for epoch in range(training_epochs):
@@ -60,7 +60,7 @@ for epoch in range(training_epochs):
         batch_xs, batch_ys = get_random_block_from_data(X_train, Y_train, batch_size)
 
         # Fit training using batch raw_data
-        cost, summary = model.partial_fit(batch_xs, batch_ys)
+        cost, summary = model.partial_fit(batch_xs)
         # Compute average loss
         avg_cost += cost / n_samples * batch_size
         model.summ_writer.add_summary(summary, global_step)
@@ -73,34 +73,13 @@ for epoch in range(training_epochs):
         #     pr_weights = np.abs(np.sum(weights, 0))
         #     Utils.plot_histogram(pr_weights, 50)
 
-print("Total cost: " + str(model.calc_total_cost(X_test, Y_test)))
+print("Total cost: " + str(model.calc_total_cost(X_test)))
 
-weights_ = model.get_weight()
+weights_ = model.get_weights()
 for idx, w in weights_.items():
-    with open("results/ff/weight_{1}_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), idx), 'wb') as f:
+    with open("results/{2}/weight_{1}_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), idx, MODEL_NAME), 'wb') as f:
         data_w = np.sum(np.abs(w), 1)
         pickle.dump(data_w, f)
-        # Utils.plot_histogram(data=np.sum(np.abs(w), 0),
-        #                     title="Weight distribution per nodes",
-        #                     save_to="results/ff/weight_{1}_{0}.png".format("_".join([str(x) for x in params['network_shape'][1:-1]]), str(idx)))
-
-eval = []
-for epoch_ in range(eval_epochs):
-    total_batch = int(n_test_samples / batch_size)
-    # Loop over all batches
-    for i in range(total_batch):
-        batch_xs, batch_ys = get_next_block_from_data(X_test, Y_test, i*batch_size, batch_size)
-
-        # Fit training using batch raw_data
-        accuracy = model.get_accuracy(batch_xs, batch_ys)
-        eval.append(accuracy)
-        if epoch_ % 100 == 0:
-            print("Epoch:", '%04d' % (epoch_ + 1), "accuracy =", "{:.9f}".format(accuracy))
-
-print(eval)
-with open("results/ff/eval_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]])), 'wb') as act_f:
-    pickle.dump(eval, act_f)
-
 
 activation_dicts = {k: {} for k in params['activation_pattern_layers']}
 sum_of_act_dicts = {k: [] for k in params['activation_pattern_layers']}
@@ -108,9 +87,9 @@ for epoch in range(inference_epochs):
     total_batch=int(n_test_samples / batch_size)
     # Loop over all batches
     for i in range(total_batch):
-        batch_xs, batch_ys = get_random_block_from_data(X_test, Y_test, batch_size)
+        batch_xs, _ = get_random_block_from_data(X_test, Y_test, batch_size)
 
-        cost = model.inference(batch_xs, batch_ys)
+        cost = model.inference(batch_xs)
         activation_patterns = model.get_activations(batch_xs)
         for j, act_patt in activation_patterns.items():
             current_act_dict = activation_dicts[j]
@@ -130,5 +109,5 @@ sorted_acts = {}
 for k, act_dict in activation_dicts.items():
     act_sorted = sorted(set(act_dict.values()), reverse=True)[:1000]
     sorted_acts[k] = act_sorted
-with open("results/ff/act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]])), 'wb') as act_f:
+with open("results/{1}/act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), MODEL_NAME), 'wb') as act_f:
     pickle.dump(sorted_acts, act_f)

@@ -29,11 +29,12 @@ class FeedforwardNet(object):
             with tf.name_scope("layer_{0}".format(i+1)):
                 W = tf.Variable(tf.truncated_normal(shape=[self.network_shape[i], self.network_shape[i+1]], stddev=0.1),name="W")
                 b = tf.Variable(tf.constant(0.1, shape=[self.network_shape[i+1]]), name="b")
-                self.weights['W_{0}'.format(i+1)] = W
                 Utils.variable_summaries(W, "W")
                 Utils.variable_summaries(b, "b")
                 self.activation = self.activation_function(tf.matmul(self.activation, W) + b)
-                self.activation_patterns['activation_layer_{0}'.format(i + 1)] = self.activation
+                if i > 0:
+                    self.activation_patterns['layer_{0}'.format(i)] = self.activation
+                    self.weights['W_{0}'.format(i)] = W
 
         # for i in range(len(self.weights)):
         #     act = self.activation_function(tf.matmul(self.activation, self.weights['W_{0}'.format(i)]))
@@ -84,6 +85,10 @@ class FeedforwardNet(object):
     def calc_total_cost(self, X, Y):
         return self.sess.run(self.cost, feed_dict={self.input: X, self.output: Y})
 
+    def get_activations(self, X):
+        # return [self.sess.run(v, feed_dict={self.input: X}) for _, v in self.activation_patterns.items()]
+        return {k: self.sess.run(v, feed_dict={self.input: X}) for k, v in self.activation_patterns.items()}
+
     def get_activation_pattern(self, input_, activation_name=None):
         if activation_name is not None:
             return [self.sess.run(self.activation_patterns[activation_name], feed_dict={self.input: input_})]
@@ -95,5 +100,5 @@ class FeedforwardNet(object):
         if weight_name is not None:
             return [self.sess.run(self.weights[weight_name])]
         else:
-            return [self.sess.run(v) for _, v in self.weights.items()]
+            return {k: self.sess.run(v) for k, v in self.weights.items()}
 

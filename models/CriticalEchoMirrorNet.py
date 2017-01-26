@@ -30,14 +30,14 @@ class CriticalEchoMirrorNet(object):
         self.hidden_state_activation_patterns = {}
         self.activation = self.input
         self.hidden_states = {}
-        # self.hidden_states_update_ops = {}
+        self.hidden_states_update_ops = {}
         for i in range(1, len(self.network_shape) - 1):
-            # h = tf.Variable(tf.truncated_normal([self.batch_size, self.network_shape[i]]), name="hs_{0}".format(i), trainable=False)
-            h = tf.truncated_normal([self.batch_size, self.network_shape[i]])
+            h = tf.Variable(tf.truncated_normal([self.batch_size, self.network_shape[i]]), name="hs_{0}".format(i), trainable=False)
+            # h = tf.truncated_normal([self.batch_size, self.network_shape[i]])
             self.hidden_states["hs_{0}".format(i)] = h
-            # Utils.variable_summaries(self.hidden_states["hs_{0}".format(i)], "hs_{0}".format(i))
+            Utils.variable_summaries(self.hidden_states["hs_{0}".format(i)], "hs_{0}".format(i))
         if self.hidden_weights is not None:
-            H_tune = tf.Variable(1.0, trainable=True, name="H_tune")
+            H_tune = tf.Variable(1.0, trainable=False, name="H_tune")
             Utils.variable_summaries(H_tune, "H_tune")
         else:
             H_tune = tf.Variable(1, trainable=False, name="H_tune")
@@ -80,8 +80,8 @@ class CriticalEchoMirrorNet(object):
                     with tf.name_scope("activation"):
                         self.activation = self.activation_function(tf.multiply(readout, input_for_mirror))
                     # self.hidden_state_activation_patterns['hidden_state_layer_{0}'.format(i + 1)] = self.hidden_states[self.hidden_states["hs_{0}".format(i+1)]]
-                    # self.hidden_states_update_ops["hs_{0}".format(i+1)] = self.hidden_states["hs_{0}".format(i+1)].assign(hidden_update)
-                    self.hidden_states["hs_{0}".format(i+1)] = hidden_update
+                    self.hidden_states_update_ops["hs_{0}".format(i+1)] = self.hidden_states["hs_{0}".format(i+1)].assign(hidden_update)
+                    # self.hidden_states["hs_{0}".format(i+1)] = hidden_update
                 else:
                     with tf.name_scope("activation"):
                         self.activation = self.activation_function(tf.matmul(self.activation, W) + bW)
@@ -178,8 +178,8 @@ class CriticalEchoMirrorNet(object):
 
     def partial_fit(self, X, Y):
         fetches = [self.cost, self.optimizer, self.merged]
-        # for _, v in self.hidden_states_update_ops.items():
-        #     fetches.append(v)
+        for _, v in self.hidden_states_update_ops.items():
+            fetches.append(v)
         cost, opt, merged, *_ = self.sess.run(fetches, feed_dict={self.input: X, self.output: Y})
 
         return cost, merged
