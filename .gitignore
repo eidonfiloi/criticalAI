@@ -96,3 +96,6 @@ mnist_criticality/tensorboard_dir/
 .idea/
 raw_data/
 models/tensorboard*
+results/ae
+results/cnn
+results/ff
