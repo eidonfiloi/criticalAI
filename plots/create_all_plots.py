@@ -6,24 +6,24 @@ import random
 import pickle
 
 
-def plot_histogram(data, title="", x_label="log weight degree", y_label="log counts", save_to=None, loglog=True):
+def plot_histogram(data, title="", bin=80, x_label="log weight degree", y_label="log counts", save_to=None, loglog=True):
     # the histogram of the raw_data
 
     if loglog:
-        data_ = np.log10(data)
+        data_ = np.log10([el for el in data if el > 0.0])
     else:
         data_ = data
     cmap = plt.get_cmap('viridis')
-    color = random.choice(cmap.colors)
+    color = random.choice(cmap.colors[1:])
     binN = 2 * int(math.sqrt(len(data_)))
     binw = (max(data_) - min(data_)) / binN
     bins = np.arange(min(data_), max(data_) + binw, binw)
 
     plt.figure()
     if loglog:
-        plt.hist(data_, bins=bins, log=True, color=color, alpha=0.90)
+        plt.hist(data_, bins=bin, log=True, color=color, alpha=0.90)
     else:
-        plt.hist(data_, bins=bins, log=False, color=color, alpha=0.90)
+        plt.hist(data_, bins=bin, log=False, color=color, alpha=0.90)
 
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -41,7 +41,7 @@ def plot_line(data, title="", x_label="log weight degree", y_label="log counts",
     cmap = plt.get_cmap('viridis')
     color = random.choice(cmap.colors)
     plt.figure()
-    plt.plot(data[0], data[1], color=color)
+    plt.plot(data[0], data[1], 'o', color=color)
 
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -79,7 +79,7 @@ def create_eval_plots(path_, dirs=('ff', 'cnn')):
         ax1.legend(loc=2)
 
 
-def create_plots(path_, pattern_):
+def create_plots(path_, pattern_, model_name_):
     pickles = [fn for fn in os.listdir(path_) if pattern_ in fn]
     weights = [fn for fn in pickles if fn.startswith("weight")]
     acts = [fn for fn in pickles if fn.startswith("act")]
@@ -94,14 +94,15 @@ def create_plots(path_, pattern_):
                     l = len(d)
                     logrank = [math.log10(i) for i in range(1, l + 1)]
                     logd = [math.log10(float(el)) for el in d]
-                    plot_line([logrank, logd], save_to="{0}_act_plot_{1}".format(name, j))
+                    plot_line([logrank, logd], title="activation pattern frequency", save_to="{2}_{0}_act_plot_{1}".format(name, j, model_name_))
 
     if len(weights) > 0:
         for fn in weights:
             name = fn.split(".")[0]
             with open(path_ + fn, 'rb') as p:
                 data = pickle.load(p)
-                plot_histogram(data, title="weight distribution", save_to="{0}_weight_plot".format(name))
+                b = 2 * int(math.sqrt(len(data)))
+                plot_histogram(data, bin=b, title="weight distribution", save_to="{1}_{0}_weight_plot".format(name, model_name_))
 
     if len(sum_acts) > 0:
         for fn in sum_acts:
@@ -109,9 +110,10 @@ def create_plots(path_, pattern_):
             with open(path_ + fn, 'rb') as p:
                 data = pickle.load(p)
                 for j, d in data.items():
-                    plot_histogram(d, title="average activations", save_to="{0}_sum_act_plot_{1}".format(name, j), x_label="log avg activations", y_label="log count")
+                    plot_histogram(d, title="average activations", save_to="{2}_{0}_sum_act_plot_{1}".format(name, j, model_name_), x_label="log avg activations", y_label="log count")
 
 if __name__ == '__main__':
-    path = "../results/ae/"
-    model_pattern = "600"
-    create_plots(path, model_pattern)
+    model_name = "cnn"
+    model_pattern = "conv3_local3"
+    path = "../results/{0}/".format(model_name)
+    create_plots(path, model_pattern, model_name)
