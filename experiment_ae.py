@@ -41,7 +41,7 @@ display_step = 1
 MODEL_NAME = "ae"
 
 params = {
-    'network_shape': [1024, 600, 10],
+    'network_shape': [1024, 500, 10],
     'activation_function': tf.nn.relu,
     'optimizer': tf.train.AdamOptimizer(learning_rate=1e-4),
     'tensorboard_dir': 'models/tensorboard_ae',

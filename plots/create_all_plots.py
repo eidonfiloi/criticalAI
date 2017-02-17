@@ -31,7 +31,7 @@ def plot_histogram(data, title="", bin=80, x_label="log weight degree", y_label=
     plt.grid(True)
 
     if save_to is not None:
-        plt.savefig(save_to)
+        plt.savefig(save_to + '.pdf', format='pdf')
     else:
         plt.show()
 
@@ -49,13 +49,13 @@ def plot_line(data, title="", x_label="log weight degree", y_label="log counts",
     if save_to is None:
         plt.show()
     else:
-        plt.savefig(save_to)
+        plt.savefig(save_to + '.pdf', format='pdf')
 
 
 def create_eval_plots(path_, dirs=('ff', 'cnn')):
     evals = []
     for dir in dirs:
-        evals += [fn for fn in os.listdir(path_ + dir) if fn.startswith("eval")]
+        evals += [dir + "/" + fn for fn in os.listdir(path_ + dir) if fn.startswith("eval")]
 
     if len(evals) > 0:
         datas = {}
@@ -78,12 +78,27 @@ def create_eval_plots(path_, dirs=('ff', 'cnn')):
 
         ax1.legend(loc=2)
 
+        plt.show()
+
 
 def create_plots(path_, pattern_, model_name_):
     pickles = [fn for fn in os.listdir(path_) if pattern_ in fn]
     weights = [fn for fn in pickles if fn.startswith("weight")]
     acts = [fn for fn in pickles if fn.startswith("act")]
+    node_acts = [fn for fn in pickles if fn.startswith("node_act")]
     sum_acts = [fn for fn in pickles if fn.startswith("sum_act")]
+
+    if len(node_acts) > 0:
+        for fn in node_acts:
+            name = fn.split(".")[0]
+            with open(path_ + fn, 'rb') as p:
+                data = pickle.load(p)
+                for j, d in data.items():
+                    l = len(d)
+                    logrank = [math.log10(i) for i in range(1, l + 1)]
+                    logd = [math.log10(float(el)+1.0) for el in sorted(d, reverse=True)]
+                    plot_line([logrank, logd], x_label="log activation rank", title="single node activation frequency",
+                              save_to="pdfs/{2}_{0}_node_act_plot_{1}".format(name, j, model_name_))
 
     if len(acts) > 0:
         for fn in acts:
@@ -94,7 +109,7 @@ def create_plots(path_, pattern_, model_name_):
                     l = len(d)
                     logrank = [math.log10(i) for i in range(1, l + 1)]
                     logd = [math.log10(float(el)) for el in d]
-                    plot_line([logrank, logd], title="activation pattern frequency", save_to="{2}_{0}_act_plot_{1}".format(name, j, model_name_))
+                    plot_line([logrank, logd], x_label="log activation rank", title="activation pattern frequency", save_to="pdfs/{2}_{0}_act_plot_{1}".format(name, j, model_name_))
 
     if len(weights) > 0:
         for fn in weights:
@@ -102,7 +117,7 @@ def create_plots(path_, pattern_, model_name_):
             with open(path_ + fn, 'rb') as p:
                 data = pickle.load(p)
                 b = 2 * int(math.sqrt(len(data)))
-                plot_histogram(data, bin=b, title="weight distribution", save_to="{1}_{0}_weight_plot".format(name, model_name_))
+                plot_histogram(data, bin=b, title="weight distribution", save_to="pdfs/{1}_{0}_weight_plot".format(name, model_name_))
 
     if len(sum_acts) > 0:
         for fn in sum_acts:
@@ -110,10 +125,12 @@ def create_plots(path_, pattern_, model_name_):
             with open(path_ + fn, 'rb') as p:
                 data = pickle.load(p)
                 for j, d in data.items():
-                    plot_histogram(d, title="average activations", save_to="{2}_{0}_sum_act_plot_{1}".format(name, j, model_name_), x_label="log avg activations", y_label="log count")
+                    plot_histogram(d, title="average activations", save_to="pdfs/{2}_{0}_sum_act_plot_{1}".format(name, j, model_name_), x_label="log avg activations", y_label="log count")
 
 if __name__ == '__main__':
-    model_name = "cnn"
-    model_pattern = "conv3_local3"
+    model_name = "ff"
+    model_pattern = "500_400_300_200_200"
     path = "../results/{0}/".format(model_name)
     create_plots(path, model_pattern, model_name)
+
+    # create_eval_plots("../results/")

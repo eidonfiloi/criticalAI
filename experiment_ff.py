@@ -41,11 +41,11 @@ display_step = 1
 MODEL_NAME = "ff"
 
 params = {
-    'network_shape': [1024, 600, 300, 10],
+    'network_shape': [1024, 500, 400, 300, 200, 200, 10],
     'activation_function': tf.nn.relu,
     'optimizer': tf.train.AdamOptimizer(learning_rate=1e-4),
     'tensorboard_dir': 'models/tensorboard_ff',
-    'activation_pattern_layers': ['layer_1', 'layer_2'],
+    'activation_pattern_layers': ['layer_1', 'layer_2', 'layer_3', 'layer_4', 'layer_5'],
     'layers_with_start': [0]
 }
 
@@ -98,11 +98,11 @@ for epoch_ in range(eval_epochs):
             print("Epoch:", '%04d' % (epoch_ + 1), "accuracy =", "{:.9f}".format(accuracy))
 
 print(eval)
-with open("results/ff/eval_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]])), 'wb') as act_f:
-    pickle.dump(eval, act_f)
-
+# with open("results/ff/eval_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]])), 'wb') as act_f:
+#     pickle.dump(eval, act_f)
 
 activation_dicts = {k: {} for k in params['activation_pattern_layers']}
+node_activation_lists = {k: [] for k in params['activation_pattern_layers']}
 sum_of_act_dicts = {k: [] for k in params['activation_pattern_layers']}
 for epoch in range(inference_epochs):
     total_batch=int(n_test_samples / batch_size)
@@ -114,21 +114,31 @@ for epoch in range(inference_epochs):
         activation_patterns = model.get_activations(batch_xs)
         for j, act_patt in activation_patterns.items():
             current_act_dict = activation_dicts[j]
+            current_node_activation_list = node_activation_lists[j]
             sum_of_act_dicts[j] += np.mean(act_patt, 1).tolist()
             for single_act_patt in act_patt:
                 nonzero_tup = tuple(np.nonzero(single_act_patt)[0])
+                binarized_act = np.where(single_act_patt > 0.0, 1.0, 0.0)
+                if(len(current_node_activation_list) > 0):
+                    current_node_activation_list += binarized_act
+                else:
+                    current_node_activation_list = binarized_act
                 if nonzero_tup in current_act_dict:
                     current_act_dict[nonzero_tup] += 1
                 else:
                     current_act_dict[nonzero_tup] = 1
             activation_dicts[j] = current_act_dict
+            node_activation_lists[j] = current_node_activation_list
 
-with open("results/{1}/sum_act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), MODEL_NAME), 'wb') as sum_act_f:
-    pickle.dump(sum_of_act_dicts, sum_act_f)
+# with open("results/{1}/sum_act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), MODEL_NAME), 'wb') as sum_act_f:
+#     pickle.dump(sum_of_act_dicts, sum_act_f)
+
+with open("results/{1}/node_act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), MODEL_NAME), 'wb') as node_act_f:
+    pickle.dump(node_activation_lists, node_act_f)
 
 sorted_acts = {}
 for k, act_dict in activation_dicts.items():
     act_sorted = sorted(set(act_dict.values()), reverse=True)[:1000]
     sorted_acts[k] = act_sorted
-with open("results/ff/act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]])), 'wb') as act_f:
-    pickle.dump(sorted_acts, act_f)
+# with open("results/{1}/act_{0}.pickle".format("_".join([str(x) for x in params['network_shape'][1:-1]]), MODEL_NAME), 'wb') as act_f:
+#     pickle.dump(sorted_acts, act_f)

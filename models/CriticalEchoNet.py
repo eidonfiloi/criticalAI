@@ -35,17 +35,17 @@ class CriticalEchoNet(object):
             h = tf.Variable(tf.truncated_normal([self.batch_size, self.network_shape[i]]), name="hs_{0}".format(i), trainable=False)
             self.hidden_states["hs_{0}".format(i)] = h
             Utils.variable_summaries(self.hidden_states["hs_{0}".format(i)], "hs_{0}".format(i))
-        if self.hidden_weights is not None:
-            H_tune = tf.Variable(1.0, trainable=True, name="H_tune")
-            Utils.variable_summaries(H_tune, "H_tune")
-        else:
-            H_tune = tf.Variable(1, trainable=False, name="H_tune")
+        # if self.hidden_weights is not None:
+        #     H_tune = tf.Variable(1.0, trainable=True, name="H_tune")
+        #     Utils.variable_summaries(H_tune, "H_tune")
+        # else:
+        #     H_tune = tf.Variable(1, trainable=False, name="H_tune")
         for i in range(len(self.network_shape) - 1):
             with tf.name_scope("layer{0}".format(i + 1)):
                 # input weight and bias
-                W = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.01),
+                W = tf.Variable(tf.random_normal([self.network_shape[i], self.network_shape[i + 1]], stddev=0.1),
                                 name="W")
-                bW = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name="bW")
+                bW = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name="bW")
                 Utils.variable_summaries(W, "W")
                 Utils.variable_summaries(bW, "bW")
                 if i < len(self.network_shape) - 2:
@@ -55,17 +55,18 @@ class CriticalEchoNet(object):
                         H = tf.Variable(self.hidden_weights[H_name].astype('float32'), dtype=tf.float32, trainable=False, name="H")
 
                     else:
-                        H = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.01), trainable=False, name="H")
+                        H = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.1), trainable=False, name="H")
 
                     # readout weights and biases
-                    R = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.01), name="R")
-                    bR = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.01), name="bR")
+                    R = tf.Variable(tf.random_normal([self.network_shape[i + 1], self.network_shape[i + 1]], stddev=0.1), name="R")
+                    bR = tf.Variable(tf.random_normal([self.network_shape[i + 1]], stddev=0.1), name="bR")
                     Utils.variable_summaries(R, "R")
                     Utils.variable_summaries(bR, "bR")
 
                     with tf.name_scope("hidden"):
                         input_for_hidden = tf.matmul(self.activation, W) + bW
-                        hidden_update = self.activation_function(tf.add(input_for_hidden, tf.matmul(self.hidden_states["hs_{0}".format(i+1)], tf.scalar_mul(H_tune, H))))
+                        hidden_update = tf.nn.tanh(tf.add(input_for_hidden,
+                                                          tf.matmul(self.hidden_states["hs_{0}".format(i + 1)], H)))
                         self.hidden_states_update_ops["hs_{0}".format(i + 1)] = self.hidden_states["hs_{0}".format(i + 1)].assign(hidden_update)
                     with tf.name_scope("readout"):
                         self.activation = self.activation_function(tf.matmul(hidden_update, R) + bR)
@@ -75,7 +76,7 @@ class CriticalEchoNet(object):
                     with tf.name_scope("activation"):
                         self.activation = self.activation_function(tf.matmul(self.activation, W) + bW)
                 act = self.activation
-                self.activation_patterns['activation_layer_{0}'.format(i + 1)] = act
+                self.activation_patterns['layer_{0}'.format(1)] = act
 
         # cost
         with tf.name_scope("cost"):
@@ -113,6 +114,9 @@ class CriticalEchoNet(object):
 
     def calc_total_cost(self, X, Y):
         return self.sess.run(self.cost, feed_dict={self.input: X, self.output: Y})
+
+    def get_activations(self, X):
+        return {k: self.sess.run(v, feed_dict={self.input: X}) for k, v in self.activation_patterns.items()}
 
     def get_activation_pattern(self, input_, activation_name=None):
         if activation_name is not None:

@@ -55,6 +55,10 @@ class TFTest(unittest.TestCase):
 
         arr = np.array([1, 2, 0, 3, 0, 5])
 
+        bin_arr = np.where(arr > 0.0, 1.0, 0.0)
+
+        print(bin_arr)
+
         nz = tuple(np.nonzero(arr)[0])
         print(nz)
 
