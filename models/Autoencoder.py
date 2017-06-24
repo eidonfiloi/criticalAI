@@ -42,7 +42,7 @@ class Autoencoder(object):
                 self.reconstruction = self.activation_function(tf.matmul(self.hidden, W_out) + b_out)
             self.layer_output = self.hidden
 
-        self.cost = tf.reduce_sum(tf.pow(tf.sub(self.reconstruction, self.layer_input), 2.0),
+        self.cost = tf.reduce_sum(tf.pow(tf.subtract(self.reconstruction, self.layer_input), 2.0),
                                   name="reconstruction_cost")
         tf.summary.scalar('cost', self.cost)
         self.optimizer = self.optimizer_.minimize(self.cost)

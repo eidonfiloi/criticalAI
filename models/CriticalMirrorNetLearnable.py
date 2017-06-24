@@ -139,7 +139,7 @@ class CriticalMirrorNetLearnable(object):
         fetches = [self.cost, self.optimizer, self.merged, self.hidden_modifier_cost, self.hs_optimizer]
         for _, v in self.hidden_states_update_ops.items():
             fetches.append(v)
-        cost, opt, merged, hs_cost, hs_opt, *_ = self.sess.run(fetches, feed_dict={self.input: X, self.output: Y})
+        cost, opt, merged, hs_cost, hs_opt, _ = self.sess.run(fetches, feed_dict={self.input: X, self.output: Y})
 
         return cost, merged
 
