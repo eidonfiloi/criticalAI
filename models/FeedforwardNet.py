@@ -46,7 +46,7 @@ class FeedforwardNet(object):
         correct_prediction = tf.equal(tf.argmax(self.activation, 1), tf.argmax(self.output, 1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.activation, self.output))
+        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.activation, labels=self.output))
         tf.summary.scalar('cost', self.cost)
         self.optimizer = self.optimizer_.minimize(self.cost)
 
