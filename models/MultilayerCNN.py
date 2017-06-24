@@ -72,7 +72,7 @@ class MultilayerCNN(object):
                         self.layer_output = self.activation_function(tf.matmul(self.layer_output, weights) + biases,
                                                                      name="layer_output")
 
-        self.cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.layer_output, self.output))
+        self.cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.layer_output, labels=self.output))
         tf.summary.scalar('cross_entropy', self.cross_entropy)
         self.train_step = self.optimizer_.minimize(self.cross_entropy)
         correct_prediction = tf.equal(tf.argmax(self.layer_output, 1), tf.argmax(self.output, 1))
